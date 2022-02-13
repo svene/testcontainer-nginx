@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NginxTest {
 
 	private static final DockerImageName NGINX_IMAGE = DockerImageName.parse("nginx:1.21.6");
-	private static final int PROXY_PORT = 9201;
 
 	static File tmpDir;
 	static NginxContainer<?> container;
@@ -39,12 +38,9 @@ public class NginxTest {
 		Files.write(indexFile.toPath(), s.getBytes(StandardCharsets.UTF_8));
 
 		container = new NginxContainer<>(NGINX_IMAGE)
-//			.withCustomContent(tmpDir.getPath())
-//			.withFileSystemBind(docPath + "/", "/usr/share/nginx/html/", BindMode.READ_ONLY)
 			.withCopyFileToContainer(MountableFile.forHostPath(tmpDir.toPath()), "/usr/share/nginx/html/")
 			.waitingFor(new HttpWaitStrategy())
 		;
-		container.addExposedPort(PROXY_PORT);
 		container.start();
 	}
 
