@@ -20,25 +20,25 @@ public class NginxTest {
 
 	private static final DockerImageName NGINX_IMAGE = DockerImageName.parse("nginx:1.21.6");
 
-	static File tmpDir;
+	static File htmlFolder;
 	static NginxContainer<?> container;
+
+	private static final String NGINX_CONTAINER_HTML_FOLDER = "/usr/share/nginx/html/";
+
+	private static final String NGINX_CONFIG_TEMPLATE = """
+		""";
+	private static final String INDEX_HTML = """
+  			<html><body>Hello World!</body></html>
+		""";
 
 	@BeforeAll
 	static void setUp() throws IOException {
-		tmpDir = Files.createTempDirectory("tmpDirPrefix").toFile();
-		tmpDir.setExecutable(true, false);
-		tmpDir.setReadable(true, false);
-		tmpDir.deleteOnExit();
-
-		File indexFile = new File(tmpDir, "index.html");
-		indexFile.setReadable(true, false);
-		indexFile.deleteOnExit();
-
-		String s = "<html><body>Hello World!</body></html>";
-		Files.write(indexFile.toPath(), s.getBytes(StandardCharsets.UTF_8));
+		htmlFolder = TestUtil.createTempFolder("testcontainer_nginx_html_folder");
+		File indexHtmlFile = TestUtil.newTempFile(htmlFolder, "index.html");
+		Files.writeString(indexHtmlFile.toPath(), INDEX_HTML);
 
 		container = new NginxContainer<>(NGINX_IMAGE)
-			.withCopyFileToContainer(MountableFile.forHostPath(tmpDir.toPath()), "/usr/share/nginx/html/")
+			.withCopyFileToContainer(MountableFile.forHostPath(htmlFolder.toPath()), NGINX_CONTAINER_HTML_FOLDER)
 			.waitingFor(new HttpWaitStrategy())
 		;
 		container.start();
